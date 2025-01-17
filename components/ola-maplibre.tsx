@@ -81,12 +81,18 @@ const OlaMaplibre = () => {
 		});
 
 		const markerOrigin = new Marker({
-			draggable: true,
+			draggable: false,
 			color: 'red',
 		})
 			.setLngLat([73.847466, 18.530823])
 			.addTo(myMap);
 
+		const markerDestination = new Marker({
+			color: 'blue',
+			draggable: true,
+		})
+			.setLngLat([73.8547, 18.4655])
+			.addTo(myMap);
 		const geolocate = new GeolocateControl({
 			positionOptions: {
 				enableHighAccuracy: true,
@@ -94,6 +100,10 @@ const OlaMaplibre = () => {
 			trackUserLocation: true,
 		});
 		myMap.addControl(geolocate);
+		// geolocate.on('geolocate', (e) => {
+		// 	const { longitude, latitude } = e.coords;
+		// 	markerOrigin.setLngLat([longitude, latitude]);
+		// });
 	}, []);
 	return (
 		<div ref={mapRef} className="w-full h-screen">
