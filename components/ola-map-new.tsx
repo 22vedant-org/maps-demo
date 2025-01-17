@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import polyline from '@mapbox/polyline';
+import { Feature, LineString } from 'geojson';
 export default function OlaMapNew() {
 	const [markerPositions, setMarkerPositions] = useState({
 		markerA: { lng: 73.847466, lat: 18.530823 },
 		markerB: { lng: 73.8547, lat: 18.4655 },
 	});
-	``;
+	const [polyCords, setPolyCords] = useState<[number, number][]>([]);
+	// const routeLayerId = 'route-layer'
+
 	const mapRef = useRef<HTMLDivElement>(null);
 	const sendParamsOla = useCallback(
 		async (positions: typeof markerPositions) => {
@@ -24,6 +27,16 @@ export default function OlaMapNew() {
 						},
 					}
 				);
+				if (response.data['status'] === 'SUCCESS') {
+					const routes = response.data.routes;
+					const polyLine = routes[0].overview_polyline;
+					// console.log(polyLine);
+
+					const decoded = polyline.decode(polyLine);
+					setPolyCords(decoded);
+				}
+				// console.log(response);
+
 				return response.data;
 			} catch (error: any) {
 				console.error(error);
@@ -44,6 +57,19 @@ export default function OlaMapNew() {
 			const olaMaps = new OlaMaps({
 				apiKey: process.env.NEXT_PUBLIC_OLA_API_KEY as string,
 			});
+
+			const convertedPolyCords: [number, number][] = polyCords.map(
+				([lat, lng]) => [lng, lat]
+			);
+
+			const geoJsonLine: Feature<LineString> = {
+				type: 'Feature',
+				geometry: {
+					type: 'LineString',
+					coordinates: convertedPolyCords,
+				},
+				properties: {},
+			};
 
 			const myMap = olaMaps.init({
 				style: 'https://api.olamaps.io/tiles/vector/v1/styles/default-dark-standard/style.json',
@@ -89,9 +115,24 @@ export default function OlaMapNew() {
 			myMap.addControl(geolocate);
 			// myMap.addControl(new myMap
 
-			myMap.on('load', () => {
-				geolocate.trigger();
-			});
+			// myMap.on('load', () => {
+			// 	// geolocate.trigger();
+
+			// 	myMap.addSource('route', {
+			// 		type: 'geojson',
+			// 		data: geoJsonLine,
+			// 	});
+
+			// 	myMap.addLayer({
+			// 		id: 'route-line',
+			// 		type: 'line',
+			// 		source: 'route',
+			// 		paint: {
+			// 			'line-color': '#007cbf',
+			// 			'line-width': 4,
+			// 		},
+			// 	});
+			// });
 
 			async function onDragA() {
 				const lngLat = markerA.getLngLat();
@@ -99,12 +140,39 @@ export default function OlaMapNew() {
 					markerA: { lng: lngLat.lng, lat: lngLat.lat },
 					markerB: markerPositions.markerB,
 				};
+
+				// if (myMap.getLayer('route-line')) {
+				// 	myMap.removeLayer('route-line');
+				// }
+				// if (myMap.getSource('route')) {
+				// 	myMap.removeSource('route');
+				// }
+
 				sendParamsOla(newPositions).catch((error) => {
 					console.log(
 						'Error updating route after marker A drag',
 						error
 					);
 				});
+
+				// if(myMap.getSource('route')) {
+				// 	myMap.getSource('route').setData()
+				// }
+
+				// myMap.addSource('route', {
+				// 	type: 'geojson',
+				// 	data: geoJsonLine,
+				// });
+
+				// myMap.addLayer({
+				// 	id: 'route-line',
+				// 	type: 'line',
+				// 	source: 'route',
+				// 	paint: {
+				// 		'line-color': '#007cbf',
+				// 		'line-width': 4,
+				// 	},
+				// });
 			}
 			async function onDragB() {
 				const lngLat = markerB.getLngLat();
@@ -113,13 +181,35 @@ export default function OlaMapNew() {
 					markerA: markerPositions.markerB,
 					markerB: { lng: lngLat.lng, lat: lngLat.lat },
 				};
+
+				if (myMap.getLayer('route-line')) {
+					myMap.removeLayer('route-line');
+				}
+				if (myMap.getSource('route')) {
+					myMap.removeSource('route');
+				}
+
 				sendParamsOla(newPositions).catch((error) => {
 					console.log(
 						'Error updating route after marker B drag',
 						error
 					);
 				});
-				// console.log(lngLat);
+
+				myMap.addSource('route', {
+					type: 'geojson',
+					data: geoJsonLine,
+				});
+
+				myMap.addLayer({
+					id: 'route-line',
+					type: 'line',
+					source: 'route',
+					paint: {
+						'line-color': '#007cbf',
+						'line-width': 4,
+					},
+				});
 			}
 			markerA.on('dragend', onDragA);
 			markerB.on('dragend', onDragB);
