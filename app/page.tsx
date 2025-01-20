@@ -3,6 +3,7 @@ import OlaMap from '@/components/ola-map';
 import React from 'react';
 import dynamic from 'next/dynamic';
 import OlaMapNew from '@/components/ola-map-new';
+import OlaSearch from '@/components/rightSide';
 
 // const MapComponent = dynamic(() => import('@/components/ola-map'), {
 // 	ssr: false,
@@ -16,6 +17,7 @@ function Home() {
 				<OlaMapNew />
 			</div>
 			<div>Hello</div>
+			{/* <OlaSearch /> */}
 		</div>
 	);
 }

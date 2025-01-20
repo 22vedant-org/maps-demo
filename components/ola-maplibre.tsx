@@ -6,7 +6,11 @@ import axios from 'axios';
 import polyline from '@mapbox/polyline';
 import { Feature, LineString } from 'geojson';
 
-const OlaMaplibre = () => {
+type Props = {
+	className?: string;
+};
+
+const OlaMaplibre = ({ ...props }: Props) => {
 	const mapRef = useRef<HTMLDivElement>(null);
 	const mapInstance = useRef<Map | null>(null); // Reference to the map instance
 	const [markerPositions, setMarkerPositions] = useState({
@@ -14,7 +18,7 @@ const OlaMaplibre = () => {
 		markerDestination: { lng: 73.8547, lat: 18.4655 },
 	});
 	const [polyCords, setPolyCords] = useState<[number, number][]>([]);
-
+	function OnClickhandle() {}
 	const sendParamsOla = useCallback(
 		async (positions: typeof markerPositions) => {
 			try {
@@ -135,7 +139,7 @@ const OlaMaplibre = () => {
 					paint: {
 						'line-color': '#0f53ff',
 						'line-width': 7,
-						'line-opacity': 0.75,
+						'line-opacity': 1,
 					},
 				});
 			}
@@ -155,9 +159,9 @@ const OlaMaplibre = () => {
 							'line-cap': 'round',
 						},
 						paint: {
-							'line-color': '#3887be',
-							'line-width': 5,
-							'line-opacity': 0.75,
+							'line-color': '#0f53ff',
+							'line-width': 6,
+							'line-opacity': 1,
 						},
 					});
 				}
