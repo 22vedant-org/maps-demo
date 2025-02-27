@@ -5,7 +5,7 @@ import React from 'react';
 
 function Home() {
 	return (
-		<div className="flex w-full sm:flex-wrap md:flex-wrap gap-2 md:h-screen">
+		<div className="grid grid-cols-1 md:grid-cols-2 w-full gap-2 md:h-screen">
 			<div className="flex-1 justify-center flex items-center flex-col">
 				<OlaSearch />
 				<OlaSearch />

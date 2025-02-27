@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { GeolocateControl, Map, Marker, GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import axios from 'axios';
 import polyline from '@mapbox/polyline';
-import { Feature, LineString } from 'geojson';
+import { Feature, LineString, Point } from 'geojson';
 
 type Props = {
 	className?: string;
@@ -18,7 +19,6 @@ const OlaMaplibre = ({ ...props }: Props) => {
 		markerDestination: { lng: 73.8547, lat: 18.4655 },
 	});
 	const [polyCords, setPolyCords] = useState<[number, number][]>([]);
-	function OnClickhandle() {}
 	const sendParamsOla = useCallback(
 		async (positions: typeof markerPositions) => {
 			try {
@@ -47,12 +47,120 @@ const OlaMaplibre = ({ ...props }: Props) => {
 		[]
 	);
 
+	const updateGeofenceLayer = useCallback(
+		(map: Map, center: [number, number]) => {
+			const geofencePoint: Feature<Point> = {
+				type: 'Feature',
+				geometry: {
+					type: 'Point',
+					coordinates: center,
+				},
+				properties: {
+					radius: 200, // radius in meters
+				},
+			};
+
+			if (map.getSource('geofence')) {
+				(map.getSource('geofence') as GeoJSONSource).setData(
+					geofencePoint
+				);
+			} else {
+				map.addSource('geofence', {
+					type: 'geojson',
+					data: geofencePoint,
+				});
+
+				// Add the circle layer for the geofence
+				map.addLayer({
+					id: 'geofence-fill',
+					type: 'circle',
+					source: 'geofence',
+					paint: {
+						'circle-radius': ['get', 'radius'],
+						'circle-color': '#2196f3',
+						'circle-opacity': 0.2,
+						'circle-stroke-width': 2,
+						'circle-stroke-color': '#2196f3',
+					},
+				});
+
+				// Add center point
+				map.addLayer({
+					id: 'geofence-center',
+					type: 'circle',
+					source: 'geofence',
+					paint: {
+						'circle-radius': 6,
+						'circle-color': '#ffffff',
+						'circle-stroke-width': 2,
+						'circle-stroke-color': '#2196f3',
+					},
+				});
+			}
+		},
+		[]
+	);
+
+	// const sendGeoFence = useCallback(
+	// 	async (positions: typeof markerPositions) => {
+	// 		try {
+	// 			const response = await axios.post(
+	// 				'https://api.olamaps.io/places/v1/geofence',
+	// 				{
+	// 					name: 'Trial Geofence',
+	// 					type: 'circle',
+	// 					radius: 100,
+	// 					coordinates: [
+	// 						[
+	// 							positions.markerDestination.lat,
+	// 							positions.markerDestination.lng,
+	// 						],
+	// 					],
+	// 					status: 'active',
+	// 					projectId: '123',
+	// 				},
+	// 				{
+	// 					params: {
+	// 						api_key: process.env.NEXT_PUBLIC_OLA_API_KEY,
+	// 					},
+	// 				}
+	// 			);
+	// 			if (
+	// 				mapInstance.current &&
+	// 				mapInstance.current.isStyleLoaded()
+	// 			) {
+	// 				updateGeofenceLayer(mapInstance.current, [
+	// 					positions.markerDestination.lng,
+	// 					positions.markerDestination.lat,
+	// 				]);
+	// 			}
+	// 			return response;
+	// 		} catch (error) {
+	// 			console.error(error);
+	// 		}
+	// 	},
+	// 	[updateGeofenceLayer]
+	// );
+	// async function getGeoFence() {
+	// 	const response = await axios.get(
+	// 		'https://api.olamaps.io/places/v1/geofences',
+	// 		{
+	// 			params: {
+	// 				page: 1,
+	// 				size: 100,
+	// 				projectId: '123',
+	// 				api_key: process.env.NEXT_PUBLIC_OLA_API_KEY,
+	// 			},
+	// 		}
+	// 	);
+	// 	console.log(response.data);
+	// }
 	// Initialize the map only once
 	useEffect(() => {
 		if (!mapRef.current || mapInstance.current) return;
 
 		const myMap = new Map({
-			style: `https://api.olamaps.io/tiles/vector/v1/styles/default-dark-standard/style.json`,
+			style: `https://api.olamaps.io/styleEditor/v1/styleEdit/styles/923b4afc-f3f9-4d83-8c65-c2eb598f5834/ola-mapbox-dark`,
 			container: mapRef.current,
 			center: [73.847466, 18.530823],
 			zoom: 15,
@@ -89,6 +197,8 @@ const OlaMaplibre = ({ ...props }: Props) => {
 			};
 			setMarkerPositions(updatedPositions);
 			await sendParamsOla(updatedPositions); // Fetch the new route
+			// await sendGeoFence(updatedPositions);
+			// await getGeoFence();
 		});
 
 		myMap.addControl(

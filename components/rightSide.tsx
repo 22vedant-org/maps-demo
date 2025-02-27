@@ -126,7 +126,7 @@ const OlaSearch = () => {
 				</ul>
 			)}
 
-			{selected && (
+			{/* {selected && (
 				<div className="mt-4">
 					<h3 className="font-medium">Selected Location:</h3>
 					<p className="text-sm text-gray-600">{selected.name}</p>
@@ -134,7 +134,7 @@ const OlaSearch = () => {
 						({selected.latitude}, {selected.longitude})
 					</p>
 				</div>
-			)}
+			)} */}
 		</div>
 	);
 };
